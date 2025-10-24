@@ -1,0 +1,130 @@
+var ss = SpreadsheetApp.openByUrl("GOOGLE SHEET LINK w/ Share to everyone can view");
+var sheet = ss.getSheetByName("Sheet_name");
+
+function doPost(e) {              
+  var data = JSON.parse(e.postData.contents);
+  var userMsg = data.originalDetectIntentRequest.payload.data.message.text.trim();
+
+  // แยกข้อความเป็นส่วนตัวอักษรและตัวเลข
+  var pl_station = userMsg.replace(/[0-9]/g, '').trim();  // ตัดเลขออก
+  var docs_number = userMsg.match(/\d+/);                // ดึงเลข 
+  docs_number = docs_number ? docs_number[0] : null;
+
+  var values = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).getValues();
+  var found = false;
+
+  for (var i = 0; i < values.length; i++) {
+    var name = values[i][1].toString();  
+    var code = values[i][2].toString();  
+    var type = values[i][16];
+    var agent = values[i][8];
+    var status = values[i][15];
+    var phone_number = values[i][17];
+
+  // เงื่อนไข: ถ้าชื่อมีบางส่วนตรง และ code ตรงกับเลขหนังสือ
+    if ((pl_station === "" || name.indexOf(pl_station) !== -1) &&
+        (docs_number === null || code === docs_number)) {
+      
+      found = true;
+      
+      var result = {
+        "fulfillmentMessages": [
+          {
+            "platform": "line",
+            "type": 4,
+            "payload" : {
+              "line": {  
+                "type": "flex",
+                "altText": "ข้อมูลสถานะรายงาน",
+                "contents": {
+                "type": "bubble",
+                "hero": {
+                "type": "image",
+                "url": "https://scontent.fphs1-1.fna.fbcdn.net/v/t39.30808-6/439747958_771656491815294_1258541651840436751_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=p6820t-882wQ7kNvwHkaLyl&_nc_oc=AdnCBo3Vuqgtxkdvt2jZgjut_Pcgd9_q50YG4g_PgzErziUWx2aqJS4I6ZYsgGr0nkE&_nc_zt=23&_nc_ht=scontent.fphs1-1.fna&_nc_gid=90vq3j3EmPFYE9h2J1rPTw&oh=00_AfezZbtL07GI-Laj42kfudBdIs7oe9Rty3ibpV8dU-KKMQ&oe=6900F3F8",
+              "size": "full",
+              "aspectMode": "cover",
+              "margin": "none",
+              "aspectRatio": "2:1"
+              },
+            "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+          {
+          "type": "text",
+          "text": ".:รายงานตรวจพิสูจน์ :.",
+          "weight": "bold",
+          "align": "center",
+          "color": "#0000ff"
+        },
+        {
+          "type": "text",
+          "text": name,
+          "weight": "bold",
+          "size": "xl",
+          "align": "center",
+          "color": "#ff0000"
+        },
+        {
+          "type": "text",
+          "text": "เลขหนังสือ : " +code
+        },
+        {
+          "type": "text",
+          "text": "ประเภท : " +type
+        },
+        {
+          "type": "text",
+          "text": "ผู้ตรวจพิสูจน์ : " +agent
+        },
+        {
+          "type": "text",
+          "text": "สถานะ : " + status,
+          "size": "xl",
+          "weight": "bold",
+          "align": "center",
+          "color": "#32CD32"
+        },
+        {
+          "type": "button",
+          "action": {
+          "type": "uri",
+          "label": "ติดต่อผู้ตรวจ",
+          "uri": "tel:"+phone_number
+        }
+      }
+    ]
+  }
+  }
+              }
+            }
+          }
+        ]
+      };
+
+      return ContentService.createTextOutput(JSON.stringify(result))
+                           .setMimeType(ContentService.MimeType.JSON);
+    }
+  }
+
+  // ถ้าไม่พบข้อมูล
+  if (!found) {
+    var result = {
+      "fulfillmentMessages": [
+        {
+          "platform": "line",
+          "type": 4,
+          "payload" : {
+            "line": {  
+              "type": "text",
+              "text": "ไม่พบข้อมูลในฐานข้อมูล"
+            }
+          }
+        }
+      ]
+    };
+
+    return ContentService.createTextOutput(JSON.stringify(result))
+                         .setMimeType(ContentService.MimeType.JSON);
+  }
+}
