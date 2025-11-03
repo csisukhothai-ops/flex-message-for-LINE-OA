@@ -1,5 +1,6 @@
-var ss = SpreadsheetApp.openByUrl("GOOGLE SHEET LINK w/ Share to everyone can view");
-var sheet = ss.getSheetByName("Sheet_name");
+var ss = SpreadsheetApp.openByUrl("ลิงก์ GOOGLE SHEET");
+var sheet = ss.getSheetByName("ชื่อชีท");
+
 
 function doPost(e) {              
   var data = JSON.parse(e.postData.contents);
@@ -7,19 +8,19 @@ function doPost(e) {
 
   // แยกข้อความเป็นส่วนตัวอักษรและตัวเลข
   var pl_station = userMsg.replace(/[0-9]/g, '').trim();  // ตัดเลขออก
-  var docs_number = userMsg.match(/\d+/);                // ดึงเลข 
+  var docs_number = userMsg.match(/\d+/);                // ดึงเลข (เลขหนังสือ)
   docs_number = docs_number ? docs_number[0] : null;
 
   var values = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).getValues();
   var found = false;
 
   for (var i = 0; i < values.length; i++) {
-    var name = values[i][1].toString();  
-    var code = values[i][2].toString();  
-    var type = values[i][16];
-    var agent = values[i][8];
-    var status = values[i][15];
-    var phone_number = values[i][17];
+    var name = values[i][1].toString();  // คอลัมน์ B
+    var code = values[i][2].toString();  // คอลัมน์ C 
+    var type = values[i][16]; // คอลัมน์ Q
+    var agent = values[i][8]; // คอลัมน์ I
+    var status = values[i][15]; // คอลัมน์ P
+    var phone_number = values[i][17]; // คอลัมน์ R
 
   // เงื่อนไข: ถ้าชื่อมีบางส่วนตรง และ code ตรงกับเลขหนังสือ
     if ((pl_station === "" || name.indexOf(pl_station) !== -1) &&
@@ -128,3 +129,4 @@ function doPost(e) {
                          .setMimeType(ContentService.MimeType.JSON);
   }
 }
+
